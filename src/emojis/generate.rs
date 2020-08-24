@@ -1,57 +1,29 @@
 use crate::EmojiError::{self, *};
-use image::{ImageBuffer, Pixel, Rgb, Rgba, RgbaImage};
-use imageproc::{drawing, rect::Rect};
-use lazy_static::lazy_static;
-use rusttype::{Font, Scale};
-use std::fs;
+use nsvg::image::{RgbaImage, PNG};
 
-lazy_static! {
-	static ref FONT: Font<'static> = {
-		let raw =
-			fs::read("./resources/DMMono-Medium.ttf").expect("Font not found");
-
-		Font::try_from_vec(raw).expect("Coult not load font")
-	};
+fn fmt_svg(c: char) -> String {
+	format!(
+		r#"
+<svg viewBox="0 0 64 64" style="background-color: green">
+	<style>
+		.char {{
+			fill: white;
+		}}
+	</style>
+	<rect x="10" y="10" width="32" height="32" stroke="red" />
+	<text x="0" y="32" class="char">adf{}</text>
+</svg>
+"#,
+		c
+	)
 }
 
-static SCALE: Scale = Scale { x: 100.0, y: 100.0 };
-
 pub fn emoji_for_char(c: char) -> Result<RgbaImage, EmojiError> {
-	let mut img = ImageBuffer::from_fn(64, 64, |_, _| Rgba([255, 0, 0, 255]));
-
-	let glyph = FONT.glyph(c).scaled(SCALE);
-
-	let bounding_box = glyph.exact_bounding_box().ok_or(ImageGenerationError)?;
-
-	println!(
-		"{} : {} x {}",
-		c,
-		bounding_box.width(),
-		bounding_box.height()
-	);
-
-	let width = bounding_box.width();
-	let height = bounding_box.height() - FONT.v_metrics(SCALE).ascent;
-
-	// let x = 32 - (width as u32 / 2);
-	// let y = 32 - (height as u32 / 1);
-
-	// img = drawing::draw_filled_rect(
-	// 	&mut img,
-	// 	Rect::at(x as i32, y as i32).of_size(width as u32, height as u32),
-	// 	Rgba([0, 255, 255, 255]),
-	// );
-
-	img = drawing::draw_text(
-		&mut img,
-		Rgba([255, 255, 255, 255]),
-		0,
-		0,
-		SCALE,
-		&FONT,
-		&c.to_string(),
-	);
-
+	println!("{}", fmt_svg(c));
+	let img = nsvg::parse_str(&fmt_svg(c), nsvg::Units::Pixel, 96.0)
+		.or(Err(ImageGenerationError))?
+		.rasterize(1.0)
+		.or(Err(ImageGenerationError))?;
 	Ok(img)
 }
 
