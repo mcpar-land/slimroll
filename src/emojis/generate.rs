@@ -1,30 +1,84 @@
 use crate::EmojiError::{self, *};
-use nsvg::image::{RgbaImage, PNG};
+use lazy_static::lazy_static;
+use resvg::Image;
+use usvg::{FitTo, Options, SystemFontDB};
 
 fn fmt_svg(c: char) -> String {
 	format!(
 		r#"
-<svg viewBox="0 0 64 64" style="background-color: green">
+<svg viewBox="0 0 64 64" width="64" height="64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 	<style>
 		.char {{
-			fill: white;
+			fill: black;
+			font-size: 64px;
+			font-family: monospace;
+			text-align: center;
 		}}
 	</style>
-	<rect x="10" y="10" width="32" height="32" stroke="red" />
-	<text x="0" y="32" class="char">adf{}</text>
+	<rect x="1" y="1" rx="15" width="62" height="62" stroke-width="2" stroke="black" fill="white" />
+	<text
+		x="32"
+		y="52"
+		text-anchor="middle"
+		dominant-baseline="middle"
+		alignment-baseline="middle"
+		class="char"
+	>{}</text>
 </svg>
 "#,
 		c
 	)
 }
 
-pub fn emoji_for_char(c: char) -> Result<RgbaImage, EmojiError> {
-	println!("{}", fmt_svg(c));
-	let img = nsvg::parse_str(&fmt_svg(c), nsvg::Units::Pixel, 96.0)
-		.or(Err(ImageGenerationError))?
-		.rasterize(1.0)
-		.or(Err(ImageGenerationError))?;
+lazy_static! {
+	static ref opts: Options = {
+		let mut o = Options::default();
+		o.keep_named_groups = true;
+		o.fontdb.load_system_fonts();
+		o
+	};
+}
+
+/// Returns base64 image data
+pub fn emoji_for_char(c: char) -> Result<Image, EmojiError> {
+	// println!("{}", fmt_svg(c));
+	let tree = usvg::Tree::from_str(&fmt_svg(c), &opts)
+		.expect("Failed to make tree from str");
+	let img = resvg::render(&tree, FitTo::Height(64), None)
+		.ok_or(ImageGenerationError)?;
 	Ok(img)
+}
+
+pub fn png_base64(image: &Image) -> Result<String, EmojiError> {
+	let mut buf: Vec<u8> = vec![];
+	{
+		let mut encoder =
+			png::Encoder::new(&mut buf, image.width(), image.height());
+		encoder.set_color(png::ColorType::RGBA);
+		encoder.set_depth(png::BitDepth::Eight);
+		let mut writer = encoder
+			.write_header()
+			.or(Err(EmojiError::ImageGenerationError))?;
+		writer
+			.write_image_data(image.data())
+			.or(Err(EmojiError::ImageGenerationError))?;
+	};
+	Ok(format!("data:image/png;base64,{}", base64::encode(&buf)))
+}
+
+pub fn number_emojis() -> Result<[String; 10], EmojiError> {
+	Ok([
+		png_base64(&emoji_for_char('0')?)?,
+		png_base64(&emoji_for_char('1')?)?,
+		png_base64(&emoji_for_char('2')?)?,
+		png_base64(&emoji_for_char('3')?)?,
+		png_base64(&emoji_for_char('4')?)?,
+		png_base64(&emoji_for_char('5')?)?,
+		png_base64(&emoji_for_char('6')?)?,
+		png_base64(&emoji_for_char('7')?)?,
+		png_base64(&emoji_for_char('8')?)?,
+		png_base64(&emoji_for_char('9')?)?,
+	])
 }
 
 #[cfg(test)]
@@ -38,8 +92,8 @@ mod test {
 			let img = emoji_for_char(*i)?;
 			let path_str = format!("./test/test_{}.png", i);
 			let path = Path::new(&path_str);
-			img.save(path)?;
-			println!("saved image: {:?}", path);
+			img.save_png(path)?;
+			// println!("saved image: {:?}", path);
 		}
 
 		Ok(())

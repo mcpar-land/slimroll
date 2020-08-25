@@ -11,8 +11,10 @@ use serenity::{
 };
 
 use crate::roll::*;
+use env_vars::*;
 
 mod emojis;
+mod env_vars;
 mod error;
 mod roll;
 
@@ -33,12 +35,12 @@ impl EventHandler for Handler {}
 
 #[tokio::main]
 async fn main() {
-	kankyo::load(false).expect("Failed to load .env file");
 	env_logger::init();
-	let token = env::var("DISCORD_TOKEN").expect("Expected DISCORD_TOKEN");
-	env::var("EMOJI_SERVER").expect("Expected EMOJI_SERVER");
+	&DISCORD_TOKEN;
+	&EMOJI_SERVER;
+	&EMOJI_COPIES;
 
-	let mut client = Client::new(&token)
+	let mut client = Client::new(&*DISCORD_TOKEN)
 		.event_handler(Handler)
 		.framework(
 			StandardFramework::new()
@@ -47,6 +49,16 @@ async fn main() {
 		)
 		.await
 		.expect("Error creating client");
+
+	let http = &client.cache_and_http.as_ref().http;
+
+	crate::emojis::clear_emojis(http)
+		.await
+		.expect("Error clearing emojis");
+
+	crate::emojis::upload_emojis(http)
+		.await
+		.expect("Error uploading emojis");
 
 	if let Err(why) = client.start().await {
 		error!("Client error: {:?}", why);

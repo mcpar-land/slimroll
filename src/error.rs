@@ -2,6 +2,7 @@
 pub enum EmojiError {
 	NoEmojiServer,
 	ImageGenerationError,
+	EmojiUploadFailed,
 }
 impl std::error::Error for EmojiError {}
 impl std::fmt::Display for EmojiError {
