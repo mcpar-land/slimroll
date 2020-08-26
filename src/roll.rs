@@ -18,7 +18,7 @@ pub async fn roll(
 ) -> CommandResult {
 	match d20::roll_dice(args.message()) {
 		Ok(res) => {
-			if let Some(values) = emojis_for_number(res.total as u64, *EMOJI_COPIES) {
+			if let Some(values) = emojis_for_number(res.total as i64, *EMOJI_COPIES) {
 				let emojis = EMOJIS.read().await;
 				for val in values {
 					if let Some(emoji) = emojis.get(&val) {

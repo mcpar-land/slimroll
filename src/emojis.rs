@@ -93,13 +93,18 @@ pub async fn upload_emojis(
 	let mut zipped_results: Vec<Result<Emoji, EmojiError>> = vec![];
 
 	for i in 0..*EMOJI_COPIES {
-		for (j, emoji) in number_emojis.iter().enumerate() {
-			let val = EmojiValue(j as u8, i as u8);
+		for j in 0..10 {
+			// upload the negative in place of the final zero.
+			let (val, data_index) = if i == *EMOJI_COPIES - 1 && j == 0 {
+				(EmojiValue::Negative, 10)
+			} else {
+				(EmojiValue::Num(j as u8, i as u8), j)
+			};
 			let name: String = val.into();
 			bar.set_message(&name);
 			zipped_results.push(
 				guild
-					.create_emoji(http, &name, &emoji)
+					.create_emoji(http, &name, &number_emojis[data_index])
 					.await
 					.or(Err(EmojiError::EmojiUploadFailed)),
 			);
@@ -132,9 +137,11 @@ pub async fn setup_emojis(http: &Http) -> Result<(), EmojiError> {
 
 	let mut valid = true;
 	if let Ok(emojis) = &all_emojis {
-		for i in 0..*EMOJI_COPIES as u8 {
+		for i in 0..*EMOJI_COPIES {
 			for j in 0..=9u8 {
-				if emojis.get(&EmojiValue(j, i)).is_some() {
+				// don't check the 0 in the last copy, reserved for negative
+				let is_neg_slot = i == *EMOJI_COPIES - 1 && j == 0;
+				if is_neg_slot || emojis.get(&EmojiValue::Num(j, i as u8)).is_some() {
 				} else {
 					valid = false;
 					break;
@@ -144,6 +151,7 @@ pub async fn setup_emojis(http: &Http) -> Result<(), EmojiError> {
 				break;
 			}
 		}
+		valid = emojis.get(&EmojiValue::Negative).is_some();
 	} else {
 		valid = false;
 	}

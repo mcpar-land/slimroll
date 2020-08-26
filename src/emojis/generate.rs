@@ -73,7 +73,7 @@ pub fn png_base64(image: &Image) -> Result<String, EmojiError> {
 	Ok(format!("data:image/png;base64,{}", base64::encode(&buf)))
 }
 
-pub fn number_emojis() -> Result<[String; 10], EmojiError> {
+pub fn number_emojis() -> Result<[String; 11], EmojiError> {
 	let bar = ProgressBar::new(10);
 	bar.tick();
 	let res = Ok([
@@ -87,6 +87,7 @@ pub fn number_emojis() -> Result<[String; 10], EmojiError> {
 		png_base64(&emoji_for_char('7', None)?)?,
 		png_base64(&emoji_for_char('8', None)?)?,
 		png_base64(&emoji_for_char('9', None)?)?,
+		png_base64(&emoji_for_char('-', None)?)?,
 	]);
 	bar.finish();
 	res
@@ -99,7 +100,7 @@ mod test {
 
 	#[test]
 	fn gen_all() -> Result<(), Box<dyn std::error::Error>> {
-		for i in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].iter() {
+		for i in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-'].iter() {
 			let img = emoji_for_char(*i, None)?;
 			let path_str = format!("./test/test_{}.png", i);
 			let path = Path::new(&path_str);
