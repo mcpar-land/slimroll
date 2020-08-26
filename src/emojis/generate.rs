@@ -14,9 +14,10 @@ fn fmt_svg(c: char) -> String {
 			font-size: 64px;
 			font-family: monospace;
 			text-align: center;
+			font-weight: bold;
 		}}
 	</style>
-	<rect x="1" y="1" rx="15" width="62" height="62" stroke-width="2" stroke="black" fill="white" />
+	<rect x="0" y="0" rx="15" width="64" height="64" fill="white" />
 	<text
 		x="32"
 		y="52"

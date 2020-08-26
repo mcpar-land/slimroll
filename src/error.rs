@@ -5,6 +5,8 @@ pub enum EmojiError {
 	EmojiUploadFailed,
 	EmojiDeletionFailed,
 	CouldNotParseEmojiName,
+	RollError(caith::RollError),
+	BadCommand,
 }
 impl std::error::Error for EmojiError {}
 impl std::fmt::Display for EmojiError {
@@ -16,5 +18,11 @@ impl std::fmt::Display for EmojiError {
 impl From<regex::Error> for EmojiError {
 	fn from(_: regex::Error) -> Self {
 		Self::CouldNotParseEmojiName
+	}
+}
+
+impl From<caith::RollError> for EmojiError {
+	fn from(re: caith::RollError) -> Self {
+		Self::RollError(re)
 	}
 }

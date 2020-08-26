@@ -151,7 +151,9 @@ pub async fn setup_emojis(http: &Http) -> Result<(), EmojiError> {
 				break;
 			}
 		}
-		valid = emojis.get(&EmojiValue::Negative).is_some();
+		if valid {
+			valid = emojis.get(&EmojiValue::Negative).is_some();
+		}
 	} else {
 		valid = false;
 	}
