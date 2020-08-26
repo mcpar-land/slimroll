@@ -6,7 +6,7 @@ Instead of each dice roll taking up an entire message in your chat, the bot will
 
 If a number cannot be displayed with the emojis it has available, it defaults back to a message.
 
-# Environment Varaibles
+# Environment Variables
 
 The bot pulls some environment variables from a `.env` file.
 
