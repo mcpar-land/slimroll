@@ -8,16 +8,16 @@ use serenity::{async_trait, http::Http, model::prelude::*, prelude::*};
 use std::collections::HashMap;
 use std::{convert::TryFrom, env};
 
-mod emoji_value;
-mod generate;
+pub mod emoji_value;
+pub mod generate;
 
 lazy_static! {
 	pub static ref EMOJIS: RwLock<HashMap<EmojiValue, Emoji>> =
 		RwLock::new(HashMap::new());
 }
 
-pub fn get(val: &EmojiValue) -> Option<Emoji> {
-	None
+pub async fn get(val: &EmojiValue) -> Option<Emoji> {
+	EMOJIS.read().await.get(val).cloned()
 }
 
 pub fn emoji_server_id() -> Result<u64, EmojiError> {
