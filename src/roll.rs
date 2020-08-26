@@ -54,5 +54,8 @@ pub async fn roll_details(
 	msg
 		.reply(ctx.http.clone(), format!("{}", roll.to_string()))
 		.await?;
+	msg
+		.react(&ctx.http, ReactionType::Unicode("✅".to_string()))
+		.await?;
 	Ok(())
 }
