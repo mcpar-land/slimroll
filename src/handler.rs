@@ -52,14 +52,28 @@ impl EventHandler for Handler {
 					}
 				}
 			}
-			Err(_) => {
-				if let Err(why) = msg
-					.react(ctx.http.clone(), ReactionType::Unicode("❌".to_string()))
-					.await
-				{
-					println!("Error reacting with X: {}", why);
+			Err(why) => match why {
+				EmojiError::RollError(err) => match err {
+					caith::RollError::ParamError(errmsg) => {
+						msg
+							.react(ctx.http.clone(), ReactionType::Unicode("👎".to_string()))
+							.await
+							.ok();
+					}
+					_ => {
+						msg
+							.react(ctx.http.clone(), ReactionType::Unicode("❗".to_string()))
+							.await
+							.ok();
+					}
+				},
+				_ => {
+					msg
+						.react(ctx.http.clone(), ReactionType::Unicode("❗".to_string()))
+						.await
+						.ok();
 				}
-			}
+			},
 		};
 	}
 }

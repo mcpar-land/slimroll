@@ -31,7 +31,7 @@ pub async fn roll(
 			}
 		}
 		if let Err(why) = msg
-			.react(&ctx.http, ReactionType::Unicode("✅".to_string()))
+			.react(&ctx.http, ReactionType::Unicode("👍".to_string()))
 			.await
 		{
 			println!("React failed {}", why);
@@ -55,7 +55,7 @@ pub async fn roll_details(
 		.reply(ctx.http.clone(), format!("{}", roll.to_string()))
 		.await?;
 	msg
-		.react(&ctx.http, ReactionType::Unicode("✅".to_string()))
+		.react(&ctx.http, ReactionType::Unicode("👍".to_string()))
 		.await?;
 	Ok(())
 }
