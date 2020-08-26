@@ -16,7 +16,10 @@ use env_vars::*;
 mod emojis;
 mod env_vars;
 mod error;
+mod reactions;
 mod roll;
+
+use crate::emojis::*;
 
 pub use crate::error::EmojiError;
 
@@ -52,13 +55,17 @@ async fn main() {
 
 	let http = &client.cache_and_http.as_ref().http;
 
-	crate::emojis::clear_emojis(http)
-		.await
-		.expect("Error clearing emojis");
+	if let Err(why) = setup_emojis(http).await {
+		panic!("Error setting up emojis: {}", why);
+	}
 
-	crate::emojis::upload_emojis(http)
-		.await
-		.expect("Error uploading emojis");
+	// crate::emojis::clear_emojis(http)
+	// 	.await
+	// 	.expect("Error clearing emojis");
+
+	// crate::emojis::upload_emojis(http)
+	// 	.await
+	// 	.expect("Error uploading emojis");
 
 	if let Err(why) = client.start().await {
 		error!("Client error: {:?}", why);

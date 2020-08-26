@@ -1,4 +1,5 @@
 use crate::EmojiError::{self, *};
+use indicatif::ProgressBar;
 use lazy_static::lazy_static;
 use resvg::Image;
 use usvg::{FitTo, Options, SystemFontDB};
@@ -40,12 +41,18 @@ lazy_static! {
 }
 
 /// Returns base64 image data
-pub fn emoji_for_char(c: char) -> Result<Image, EmojiError> {
+pub fn emoji_for_char(
+	c: char,
+	bar: Option<&ProgressBar>,
+) -> Result<Image, EmojiError> {
 	// println!("{}", fmt_svg(c));
 	let tree = usvg::Tree::from_str(&fmt_svg(c), &opts)
 		.expect("Failed to make tree from str");
 	let img = resvg::render(&tree, FitTo::Height(64), None)
 		.ok_or(ImageGenerationError)?;
+	if let Some(b) = bar {
+		b.inc(1);
+	}
 	Ok(img)
 }
 
@@ -67,18 +74,22 @@ pub fn png_base64(image: &Image) -> Result<String, EmojiError> {
 }
 
 pub fn number_emojis() -> Result<[String; 10], EmojiError> {
-	Ok([
-		png_base64(&emoji_for_char('0')?)?,
-		png_base64(&emoji_for_char('1')?)?,
-		png_base64(&emoji_for_char('2')?)?,
-		png_base64(&emoji_for_char('3')?)?,
-		png_base64(&emoji_for_char('4')?)?,
-		png_base64(&emoji_for_char('5')?)?,
-		png_base64(&emoji_for_char('6')?)?,
-		png_base64(&emoji_for_char('7')?)?,
-		png_base64(&emoji_for_char('8')?)?,
-		png_base64(&emoji_for_char('9')?)?,
-	])
+	let bar = ProgressBar::new(10);
+	bar.tick();
+	let res = Ok([
+		png_base64(&emoji_for_char('0', None)?)?,
+		png_base64(&emoji_for_char('1', None)?)?,
+		png_base64(&emoji_for_char('2', None)?)?,
+		png_base64(&emoji_for_char('3', None)?)?,
+		png_base64(&emoji_for_char('4', None)?)?,
+		png_base64(&emoji_for_char('5', None)?)?,
+		png_base64(&emoji_for_char('6', None)?)?,
+		png_base64(&emoji_for_char('7', None)?)?,
+		png_base64(&emoji_for_char('8', None)?)?,
+		png_base64(&emoji_for_char('9', None)?)?,
+	]);
+	bar.finish();
+	res
 }
 
 #[cfg(test)]
@@ -89,7 +100,7 @@ mod test {
 	#[test]
 	fn gen_all() -> Result<(), Box<dyn std::error::Error>> {
 		for i in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].iter() {
-			let img = emoji_for_char(*i)?;
+			let img = emoji_for_char(*i, None)?;
 			let path_str = format!("./test/test_{}.png", i);
 			let path = Path::new(&path_str);
 			img.save_png(path)?;
