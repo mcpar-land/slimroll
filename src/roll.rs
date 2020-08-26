@@ -1,7 +1,7 @@
 use crate::emojis::*;
 use crate::env_vars::*;
 use crate::reactions::*;
-use d20;
+use caith::{RollResult, Roller};
 use log::{error, info};
 use serenity::{
 	async_trait,
@@ -16,9 +16,12 @@ pub async fn roll(
 	msg: &Message,
 	mut args: Args,
 ) -> CommandResult {
-	match d20::roll_dice(args.message()) {
+	let formula = format!("0 + {}", args.message());
+	match Roller::new(&formula)?.roll() {
 		Ok(res) => {
-			if let Some(values) = emojis_for_number(res.total as i64, *EMOJI_COPIES) {
+			if let Some(values) =
+				emojis_for_number(res.get_total() as i64, *EMOJI_COPIES)
+			{
 				let emojis = EMOJIS.read().await;
 				for val in values {
 					if let Some(emoji) = emojis.get(&val) {
