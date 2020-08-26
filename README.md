@@ -1,6 +1,6 @@
 # Slimroll
 
-An ergonomic dice-rolling Discord bot that tries to keep all its output in message reactions.
+An ergonomic dice-rolling Discord bot written in Rust that tries to keep all its output in message reactions.
 
 Instead of each dice roll taking up an entire message in your chat, the bot will react to commands with a series of emojis that are numbers reflecting the value of the roll. It can respond with any number of any size that you could possibly get as a result of a roll - all in the reactions to your command.
 
